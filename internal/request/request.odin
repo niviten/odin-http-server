@@ -35,6 +35,7 @@ add_body :: proc(req: ^Request, body: []byte) {
     req.body = body
 }
 
+// TODO: function for debugging, remove it
 print :: proc(req: ^Request) {
     fmt.println()
     fmt.println(strings.repeat("-", 33))
@@ -44,8 +45,7 @@ print :: proc(req: ^Request) {
     for name, value in req.headers {
         fmt.printf("\t%s -> %s\n", name, value)
     }
-    fmt.printf("body (%d): \t%s\n", len(req.body), strings.trim_space(string(req.body)))
-    fmt.println()
+    fmt.printf("body (%d):\n%s\n", len(req.body), strings.trim_space(string(req.body)))
     fmt.println(strings.repeat("-", 33))
     fmt.println()
 }
