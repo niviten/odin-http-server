@@ -35,41 +35,33 @@ close_parser :: proc(rp: ^RequestParser) {
 }
 
 add_bytes :: proc(rp: ^RequestParser, bytes: []byte) -> Error {
-    if rp.status == .BODY && rp.content_length <= len(rp.buff) {
-        rp.done = true
-        if rp.content_length > 0 {
-            add_body(rp.request, rp.buff[:])
-        }
-        return .NONE
-    }
-    mainloop: for b in bytes {
-        if rp.status != .BODY && b == '\n' {
+    for b in bytes {
+        if b == '\n' && is_line(rp.buff) {
+            pop(&rp.buff)
             #partial switch rp.status {
             case .FIRST_LINE:
                 parse_first_line(rp) or_return
                 rp.status = .HEADERS
             case .HEADERS:
-                line := parse_line(rp) or_return
-                line = strings.trim_space(line)
-                if len(line) == 0 {
+                if len(rp.buff) == 0 {
                     rp.status = .BODY
-                    clear_dynamic_array(&rp.buff)
                     if rp.content_length <= 0 {
                         rp.done = true
+                        rp.content_length = 0
                     }
-                    break mainloop
+                } else {
+                    parse_header(rp) or_return
                 }
-                parse_header(rp) or_return
             }
             clear_dynamic_array(&rp.buff)
+            continue
         }
         append(&rp.buff, b)
-        if rp.status == .BODY && rp.content_length <= len(rp.buff) {
+        if rp.status == .BODY && rp.content_length == len(rp.buff) {
             rp.done = true
-            if rp.content_length > 0 {
-                add_body(rp.request, rp.buff[:])
-            }
-            return .NONE
+            add_body(rp.request, rp.buff[:])
+            clear_dynamic_array(&rp.buff)
+            break
         }
     }
     return .NONE
@@ -110,4 +102,12 @@ parse_header :: proc(rp: ^RequestParser) -> Error {
         rp.content_length = strconv.parse_int(value) or_else 0
     }
     return .NONE
+}
+
+@(private="file")
+is_line :: proc(buff: [dynamic]byte) -> bool {
+    if len(buff) == 0 {
+        return false
+    }
+    return buff[len(buff) - 1] == '\r'
 }
