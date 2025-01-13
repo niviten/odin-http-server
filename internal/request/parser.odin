@@ -98,7 +98,7 @@ parse_header :: proc(rp: ^RequestParser) -> Error {
     name, _ := strings.substring_to(line, idx)
     value, _ := strings.substring_from(line, idx+2)
     add_header(rp.request, name, value)
-    if rp.content_length < 0 && strings.compare(name, "Content-Length") == 0 {
+    if rp.content_length < 0 && strings.equal_fold(name, "Content-Length") {
         rp.content_length = strconv.parse_int(value) or_else 0
     }
     return .NONE
