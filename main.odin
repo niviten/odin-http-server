@@ -6,6 +6,7 @@ import "core:strings"
 import "core:thread"
 
 import "internal/request"
+import "internal/response"
 
 main :: proc() {
     server_socket, err := net.listen_tcp(net.Endpoint{
@@ -93,6 +94,13 @@ handle_client := proc(socket: net.TCP_Socket) {
     }
 
     request.print(req_parser.request)
+
+
+
+    // resp := response.text(200, "hello there")
+    resp := response.json(201, req_parser.request.body)
+
+    net.send_tcp(socket, response.response(resp))
 
     net.close(socket)
 }
