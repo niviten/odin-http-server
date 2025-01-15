@@ -5,8 +5,8 @@ import "core:net"
 import "core:strings"
 import "core:thread"
 
-import "internal/request"
-import "internal/response"
+import "forrest/request"
+import "forrest/response"
 
 main :: proc() {
     server_socket, err := net.listen_tcp(net.Endpoint{
